@@ -1,11 +1,14 @@
-"""GNU Global indexing interface.
+"""GNU Global indexing + Universal Ctags interface.
 
 Handles running gtags, querying definitions/references, and extracting
-function body bounds from the indexed project.
+function body bounds.  Function start/end lines come from Universal Ctags
+(``ctags --output-format=json --fields=+ne``), which gives precise bounds
+for C, Java, and Python without heuristic brace/indent counting.
 """
 
 from __future__ import annotations
 
+import json as _json
 import os
 import re
 import shutil
@@ -24,6 +27,19 @@ class GlobalNotFoundError(Exception):
             "  Ubuntu/Debian: sudo apt-get install global\n"
             "  macOS:         brew install global\n"
             "  Fedora:        sudo dnf install global"
+        )
+
+
+class CtagsNotFoundError(Exception):
+    """Raised when Universal Ctags is not installed."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Universal Ctags is not installed.\n"
+            "Install it with:\n"
+            "  Ubuntu/Debian: sudo apt-get install universal-ctags\n"
+            "  macOS:         brew install universal-ctags\n"
+            "  Fedora:        sudo dnf install ctags"
         )
 
 
@@ -63,6 +79,14 @@ def _check_gtags() -> str:
     path = shutil.which("gtags")
     if path is None:
         raise GlobalNotFoundError()
+    return path
+
+
+def _check_ctags() -> str:
+    """Return path to Universal Ctags binary, or raise."""
+    path = shutil.which("ctags")
+    if path is None:
+        raise CtagsNotFoundError()
     return path
 
 
@@ -146,107 +170,95 @@ def find_references(name: str, project_dir: str) -> list[FunctionDef]:
     return refs
 
 
+def get_ctags_tags(filepath: str) -> list[dict]:
+    """Run Universal Ctags on a single file, return parsed JSON tag list.
+
+    Each element is a dict with at least: name, path, line, kind.
+    Function/method tags also have an ``end`` key with the closing line number.
+    """
+    ctags_bin = _check_ctags()
+    result = subprocess.run(
+        [
+            ctags_bin,
+            "--output-format=json",
+            "--fields=+ne",
+            "-o", "-",
+            filepath,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    tags: list[dict] = []
+    for raw_line in result.stdout.splitlines():
+        raw_line = raw_line.strip()
+        if not raw_line:
+            continue
+        try:
+            tag = _json.loads(raw_line)
+            if isinstance(tag, dict) and tag.get("_type") == "tag":
+                tags.append(tag)
+        except _json.JSONDecodeError:
+            continue
+    return tags
+
+
+def _ctags_function_bounds(
+    filepath: str, func_name: str, start_line: int
+) -> tuple[int, int] | None:
+    """Look up (start, end) line numbers for *func_name* at *start_line*.
+
+    Returns ``None`` if ctags doesn't report an ``end`` for this tag.
+    """
+    tags = get_ctags_tags(filepath)
+    # Match on name + line; kind must be function/method/def
+    for tag in tags:
+        if (
+            tag.get("name") == func_name
+            and tag.get("line") == start_line
+            and "end" in tag
+        ):
+            return (tag["line"], tag["end"])
+
+    # Fallback: match on name alone (may hit first overload)
+    for tag in tags:
+        if tag.get("name") == func_name and "end" in tag:
+            return (tag["line"], tag["end"])
+
+    return None
+
+
 def get_function_body(
     func_def: FunctionDef,
     project_dir: str,
     language: str,
 ) -> FunctionBody | None:
-    """Extract the source of a function body given its definition location.
+    """Extract the source of a function body using Universal Ctags bounds.
 
-    Uses brace/indent counting to find body bounds.
+    Runs ``ctags --output-format=json --fields=+ne`` on the file to get
+    precise start/end line numbers, then slices the source.
     """
     root = Path(project_dir).resolve()
     filepath = root / func_def.file
     if not filepath.exists():
         return None
 
-    lines = filepath.read_text(errors="replace").splitlines()
-    start = func_def.line - 1  # 0-indexed
-
-    if language in ("c", "java"):
-        return _extract_brace_body(lines, start, func_def.file)
-    elif language == "python":
-        return _extract_indent_body(lines, start, func_def.file)
-    return None
-
-
-def _extract_brace_body(
-    lines: list[str], start: int, filepath: str
-) -> FunctionBody:
-    """Extract body for brace-delimited languages (C, Java)."""
-    depth = 0
-    found_open = False
-    end = start
-
-    for i in range(start, len(lines)):
-        for ch in lines[i]:
-            if ch == "{":
-                depth += 1
-                found_open = True
-            elif ch == "}":
-                depth -= 1
-                if found_open and depth == 0:
-                    end = i
-                    source = "\n".join(lines[start : end + 1])
-                    return FunctionBody(
-                        file=filepath,
-                        start_line=start + 1,
-                        end_line=end + 1,
-                        source=source,
-                    )
-
-    # If we never found a matching brace, return from start to EOF
-    end = len(lines) - 1
-    source = "\n".join(lines[start : end + 1])
-    return FunctionBody(
-        file=filepath,
-        start_line=start + 1,
-        end_line=end + 1,
-        source=source,
+    bounds = _ctags_function_bounds(
+        str(filepath), func_def.name, func_def.line
     )
+    if bounds is None:
+        return None
 
+    start_line, end_line = bounds
+    lines = filepath.read_text(errors="replace").splitlines()
+    # Clamp to file length
+    start_idx = max(start_line - 1, 0)
+    end_idx = min(end_line, len(lines))
+    source = "\n".join(lines[start_idx:end_idx])
 
-def _extract_indent_body(
-    lines: list[str], start: int, filepath: str
-) -> FunctionBody:
-    """Extract body for indent-delimited languages (Python)."""
-    if start >= len(lines):
-        return FunctionBody(
-            file=filepath, start_line=start + 1, end_line=start + 1, source=""
-        )
-
-    # Find the indent of the def line
-    def_line = lines[start]
-    def_indent = len(def_line) - len(def_line.lstrip())
-
-    # Skip decorator lines above if start points at a decorator
-    # Find body start (first line after the def with colon)
-    body_start = start + 1
-
-    # Handle multi-line def statements
-    paren_depth = 0
-    for i in range(start, len(lines)):
-        paren_depth += lines[i].count("(") - lines[i].count(")")
-        if paren_depth <= 0 and ":" in lines[i]:
-            body_start = i + 1
-            break
-
-    end = body_start
-    for i in range(body_start, len(lines)):
-        stripped = lines[i].strip()
-        if stripped == "" or stripped.startswith("#"):
-            end = i
-            continue
-        current_indent = len(lines[i]) - len(lines[i].lstrip())
-        if current_indent <= def_indent:
-            break
-        end = i
-
-    source = "\n".join(lines[start : end + 1])
     return FunctionBody(
-        file=filepath,
-        start_line=start + 1,
-        end_line=end + 1,
+        file=func_def.file,
+        start_line=start_line,
+        end_line=end_line,
         source=source,
     )
 
