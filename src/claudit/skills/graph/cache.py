@@ -1,7 +1,7 @@
-"""Caching layer for reachability analysis.
+"""Caching layer for call graph data.
 
-Stores memoized Global results and parsed call graph edges in
-.cache/<project_hash>/ keyed on project path + GTAGS mtime.
+Stores call graph edges in .cache/<project_hash>/ keyed on
+project path + GTAGS mtime.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from claudit.skills.reachability.indexer import gtags_mtime
+from claudit.skills.index.indexer import gtags_mtime
 
 
 def _project_hash(project_dir: str) -> str:

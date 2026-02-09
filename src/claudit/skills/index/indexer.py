@@ -16,35 +16,11 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
-class GlobalNotFoundError(Exception):
-    """Raised when GNU Global is not installed."""
-
-    def __init__(self) -> None:
-        super().__init__(
-            "GNU Global (gtags/global) is not installed.\n"
-            "Install it with:\n"
-            "  Ubuntu/Debian: sudo apt-get install global\n"
-            "  macOS:         brew install global\n"
-            "  Fedora:        sudo dnf install global"
-        )
-
-
-class CtagsNotFoundError(Exception):
-    """Raised when Universal Ctags is not installed."""
-
-    def __init__(self) -> None:
-        super().__init__(
-            "Universal Ctags is not installed.\n"
-            "Install it with:\n"
-            "  Ubuntu/Debian: sudo apt-get install universal-ctags\n"
-            "  macOS:         brew install universal-ctags\n"
-            "  Fedora:        sudo dnf install ctags"
-        )
-
-
-class IndexingError(Exception):
-    """Raised when gtags indexing fails."""
+from claudit.errors import (
+    GlobalNotFoundError,
+    CtagsNotFoundError,
+    IndexingError,
+)
 
 
 @dataclass

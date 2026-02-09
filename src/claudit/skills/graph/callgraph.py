@@ -16,22 +16,15 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from pygments.lexers import CLexer, JavaLexer, PythonLexer
 from pygments.token import Token
 
-from claudit.skills.reachability.indexer import (
+from claudit.lang import LEXER_MAP
+from claudit.skills.index.indexer import (
     FunctionDef,
     find_definition,
     get_function_body,
     list_symbols,
 )
-
-
-LEXER_MAP = {
-    "c": CLexer,
-    "java": JavaLexer,
-    "python": PythonLexer,
-}
 
 
 def build_call_graph(
@@ -156,14 +149,8 @@ def _resolve_c_function_pointers(
             _field_name = m.group(1)
             target = m.group(2)
             if target in known_symbols:
-                # We can't easily determine the "caller" from an assignment,
-                # so we try to find which function this assignment is in.
-                # For now, store under a synthetic key we resolve later.
-                # A more precise approach would parse the file context.
                 file_match = re.match(r"^(.+?):(\d+):", line)
                 if file_match:
-                    # Use file:line as a temporary key; the caller resolution
-                    # is best-effort.
                     caller = _find_enclosing_function(
                         root / file_match.group(1),
                         int(file_match.group(2)),
@@ -218,25 +205,3 @@ def _find_enclosing_function(
                 best_name = name
 
     return best_name
-
-
-def detect_language(project_dir: str) -> str:
-    """Auto-detect the dominant language of a project."""
-    root = Path(project_dir).resolve()
-
-    counts = {"c": 0, "java": 0, "python": 0}
-    ext_map = {
-        ".c": "c",
-        ".h": "c",
-        ".java": "java",
-        ".py": "python",
-    }
-
-    for f in root.rglob("*"):
-        if f.is_file() and f.suffix in ext_map:
-            counts[ext_map[f.suffix]] += 1
-
-    if max(counts.values()) == 0:
-        return "c"  # default
-
-    return max(counts, key=lambda k: counts[k])

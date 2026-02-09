@@ -1,75 +1,57 @@
-"""Tests for the CLI entry point."""
+"""Tests for the CLI dispatcher."""
 
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from claudit.cli import main
 
 
-def test_no_args_returns_1():
-    assert main([]) == 1
+class TestCLIDispatch:
+    def test_no_command_shows_help(self, capsys):
+        ret = main([])
+        assert ret == 1
+        out = capsys.readouterr().out
+        assert "index" in out
+        assert "graph" in out
 
+    def test_index_create(self, tmp_path, capsys):
+        (tmp_path / "GTAGS").write_text("fake")
+        ret = main(["index", "create", str(tmp_path)])
+        assert ret == 0
+        output = json.loads(capsys.readouterr().out)
+        assert output["status"] == "exists"
 
-def test_help_does_not_crash(capsys):
-    try:
-        main(["--help"])
-    except SystemExit:
-        pass
-    captured = capsys.readouterr()
-    assert "claudit" in captured.out
+    def test_index_list_symbols(self, tmp_path, capsys):
+        (tmp_path / "GTAGS").write_text("fake")
+        mock_result = MagicMock(stdout="foo\nbar\n", returncode=0)
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
+             patch("subprocess.run", return_value=mock_result):
+            ret = main(["index", "list-symbols", str(tmp_path)])
+        assert ret == 0
+        output = json.loads(capsys.readouterr().out)
+        assert output["count"] == 2
 
+    def test_graph_build_cached(self, tmp_path, capsys):
+        (tmp_path / "GTAGS").write_text("fake")
+        with patch("claudit.skills.graph.load_call_graph", return_value={"a": ["b"]}), \
+             patch("claudit.lang.detect_language", return_value="c"):
+            ret = main(["graph", "build", str(tmp_path)])
+        assert ret == 0
+        output = json.loads(capsys.readouterr().out)
+        assert output["status"] == "cached"
 
-def test_reachability_command(capsys):
-    mock_result = {
-        "paths": [
-            {
-                "hops": [
-                    {"function": "foo", "file": "main.c", "line": 1, "snippet": "void foo()"},
-                    {"function": "bar", "file": "util.c", "line": 5, "snippet": "void bar()"},
-                ]
-            }
-        ],
-        "cache_used": False,
-    }
-    with patch("claudit.cli.find_reachability", return_value=mock_result):
-        ret = main(["reachability", "foo", "bar", "/some/project"])
+    def test_graph_callees(self, tmp_path, capsys):
+        with patch("claudit.skills.graph._require_graph", return_value={"main": ["helper"]}):
+            ret = main(["graph", "callees", "main", str(tmp_path)])
+        assert ret == 0
+        output = json.loads(capsys.readouterr().out)
+        assert output["callees"] == ["helper"]
 
-    assert ret == 0
-    captured = capsys.readouterr()
-    output = json.loads(captured.out)
-    assert output == mock_result
-
-
-def test_reachability_with_options(capsys):
-    mock_result = {"paths": [], "cache_used": True}
-    with patch("claudit.cli.find_reachability", return_value=mock_result) as mock_fn:
-        ret = main([
-            "reachability", "src", "tgt", "/proj",
-            "--language", "python",
-            "--max-depth", "5",
-            "--overrides", "/path/to/overrides.json",
-        ])
-
-    assert ret == 0
-    mock_fn.assert_called_once_with(
-        source="src",
-        target="tgt",
-        project_dir="/proj",
-        language="python",
-        max_depth=5,
-        overrides_path="/path/to/overrides.json",
-    )
-
-
-def test_unknown_command_returns_1():
-    # No subcommand provided -> returns 1
-    assert main([]) == 1
-
-
-def test_reachability_help_does_not_crash(capsys):
-    try:
-        main(["reachability", "--help"])
-    except SystemExit:
-        pass
-    captured = capsys.readouterr()
-    assert "source" in captured.out.lower() or "Source" in captured.out
+    def test_help_lists_all_skills(self, capsys):
+        try:
+            main(["--help"])
+        except SystemExit:
+            pass
+        out = capsys.readouterr().out
+        for skill in ("index", "graph", "path", "highlight"):
+            assert skill in out
