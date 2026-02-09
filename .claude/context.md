@@ -2,7 +2,7 @@
 
 ## Overview
 
-claudit is a Python library and CLI tool that provides code auditing capabilities for Claude Code. Currently it ships a single skill — **reachability analysis** — which finds call paths between two functions in large, heterogeneous codebases using GNU Global indexing and Pygments-based static analysis.
+claudit is a Python library and CLI tool that provides code auditing capabilities for Claude Code. It ships four composable skills — **index**, **graph**, **path**, and **highlight** — for analyzing call relationships in large codebases using GNU Global indexing and Pygments-based static analysis.
 
 ## Tech Stack
 
@@ -16,84 +16,89 @@ claudit is a Python library and CLI tool that provides code auditing capabilitie
 
 ```
 src/claudit/
-  cli.py                          # CLI entry point (claudit command)
+  cli.py                          # CLI entry point — two-level subcommand dispatch
+  errors.py                       # Shared exception classes
+  lang.py                         # detect_language, LEXER_MAP, load_overrides
   skills/
-    reachability/
-      core.py                     # Orchestration — find_reachability()
+    index/
+      __init__.py                 # Public API: create, list_symbols, get_body, lookup
       indexer.py                  # GNU Global + ctags wrapper
+      cli.py                     # CLI registration for `claudit index`
+    graph/
+      __init__.py                 # Public API: build, show, callees, callers
       callgraph.py               # Pygments-based call graph construction
       cache.py                   # GTAGS mtime-keyed caching layer
+      cli.py                     # CLI registration for `claudit graph`
+    path/
+      __init__.py                 # Public API: find
       pathfinder.py              # BFS path finding with annotation
+      cli.py                     # CLI registration for `claudit path`
+    highlight/
+      __init__.py                 # Public API: highlight_path, highlight_function
+      renderer.py                # Pygments-based highlighting + annotations
+      cli.py                     # CLI registration for `claudit highlight`
 tests/
-  test_cli.py                    # CLI argument parsing tests
-  test_reachability/
-    test_indexer.py
-    test_callgraph.py
-    test_cache.py
-    test_pathfinder.py
+  conftest.py                    # Shared fixtures (c_project, python_project)
+  test_cli.py                    # CLI dispatch tests
+  test_lang.py                   # detect_language, load_overrides, LEXER_MAP
+  test_index/                    # test_indexer.py, test_api.py
+  test_graph/                    # test_callgraph.py, test_cache.py, test_api.py
+  test_path/                     # test_pathfinder.py
+  test_highlight/                # test_renderer.py
 ```
 
-## Entry Points
+## CLI Commands
 
-**CLI:**
 ```bash
-claudit reachability <source> <target> <project_dir> [--language c|java|python] [--max-depth 10] [--overrides path.json]
+claudit index create <project_dir> [--force]
+claudit index list-symbols <project_dir>
+claudit index get-body <function> <project_dir> [--language c|java|python]
+claudit index lookup <symbol> <project_dir> [--kind definitions|references|both]
+
+claudit graph build <project_dir> [--language ...] [--overrides path.json] [--force]
+claudit graph show <project_dir>
+claudit graph callees <function> <project_dir>
+claudit graph callers <function> <project_dir>
+
+claudit path find <source> <target> <project_dir> [--max-depth 10] [--language ...]
+
+claudit highlight path <func1> <func2> ... --project-dir <dir> [--style monokai]
+claudit highlight function <func> --project-dir <dir>
 ```
 
-**Python API:**
+## Python API
+
 ```python
-from claudit.skills.reachability import find_reachability
-result = find_reachability(source, target, project_dir, language, max_depth, overrides_path)
+from claudit.skills.index import create, list_symbols, get_body, lookup
+from claudit.skills.graph import build, show, callees, callers
+from claudit.skills.path import find
+from claudit.skills.highlight import highlight_path, highlight_function
 ```
 
-The CLI entry point is registered as `claudit = "claudit.cli:main"` in `pyproject.toml`.
-
-## Architecture
-
-The reachability skill follows a layered design:
-
-1. **CLI** (`cli.py`) — parses arguments, dispatches to the orchestrator
-2. **Orchestrator** (`core.py`) — coordinates indexing, caching, graph building, and path finding
-3. **Indexer** (`indexer.py`) — wraps GNU Global and Universal Ctags; extracts function definitions and bodies
-4. **Call Graph Builder** (`callgraph.py`) — tokenizes function bodies with Pygments to build caller→callee edges; handles C function pointers via ripgrep
-5. **Cache** (`cache.py`) — memoizes call graphs keyed on a hash of the project path + GTAGS mtime
-6. **Pathfinder** (`pathfinder.py`) — BFS traversal to find all paths up to a configurable max depth; annotates hops with source locations
-
-Supported analysis languages: **C**, **Java**, **Python** (one language per analysis run).
+All functions return plain dicts (JSON-serializable).
 
 ## Development Commands
 
 ```bash
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests (includes coverage report)
-pytest
-
-# Run a specific test file
-pytest tests/test_reachability/test_callgraph.py
+pip install -e ".[dev]"    # Install with dev dependencies
+pytest --no-cov            # Run tests (fast, no coverage)
+pytest                     # Run tests with coverage
 ```
 
-## Key Patterns & Conventions
+## Key Patterns
 
-- **Type hints** throughout, using Python 3.10+ syntax with `from __future__ import annotations`
-- **Dataclasses** for value objects: `FunctionDef`, `FunctionBody`, `Hop`, `CallPath`
-- **Custom exceptions**: `GlobalNotFoundError`, `CtagsNotFoundError`, `IndexingError`
-- **Private helpers** prefixed with `_` (e.g., `_project_hash`, `_cache_dir`)
-- **Subprocess calls** for external tools with robust error handling
+- **Shared modules**: `errors.py` (exceptions), `lang.py` (language detection, LEXER_MAP, load_overrides)
+- **Each skill**: `__init__.py` (public API), implementation module, `cli.py`
+- **Dataclasses**: `FunctionDef`, `FunctionBody`, `Hop`, `CallPath`
 - **Graph representation**: `dict[str, list[str]]` mapping callers to callees
+- **Dependency chain**: index -> graph -> path (each skill auto-ensures prerequisites by default)
 
-## CI/CD
+## Rules for Making Changes
 
-GitHub Actions workflow (`.github/workflows/coverage.yml`) runs on pushes to `main`:
-- Ubuntu runner with Python 3.11
-- Installs `universal-ctags` as system dependency
-- Runs `pytest` and generates a coverage badge
-- Auto-commits the badge back to the repo
+1. **Always update `.claude/` when changing architecture.** Any change to the project structure, CLI commands, Python API, or skill boundaries MUST include corresponding updates to `.claude/context.md` and the relevant `.claude/skills/*.md` files. These are the source of truth for how Claude interacts with the project.
 
-## Limitations & Notes
+2. **No backward-compat shims.** When moving code, delete the old location. Do not leave re-export shims behind. Update all imports and patch targets in tests to point to the canonical location.
 
-- Analysis is single-language per run
-- Requires GNU Global and Universal Ctags installed on the system
-- Call graph is built from lexical tokens (Pygments), not a full AST — may include false positives from comments/strings in edge cases
-- Manual override files (JSON) can supplement the call graph where static analysis falls short
+3. **Tests should be realistic.** Prefer testing pure functions directly without mocking. Only mock at the subprocess boundary (global, gtags, ctags, rg). Never mock private implementation details just to make tests pass — if a test requires patching internal aliases, the code structure is wrong.
+
+4. **One source of truth for shared code.** Shared constants (LEXER_MAP), utilities (load_overrides, detect_language), and exceptions all live in top-level modules (`lang.py`, `errors.py`). Skills import from there — never duplicate.
