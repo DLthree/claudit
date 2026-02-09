@@ -92,3 +92,13 @@ pytest                     # Run tests with coverage
 - **Dataclasses**: `FunctionDef`, `FunctionBody`, `Hop`, `CallPath`
 - **Graph representation**: `dict[str, list[str]]` mapping callers to callees
 - **Dependency chain**: index -> graph -> path (each skill auto-ensures prerequisites by default)
+
+## Rules for Making Changes
+
+1. **Always update `.claude/` when changing architecture.** Any change to the project structure, CLI commands, Python API, or skill boundaries MUST include corresponding updates to `.claude/context.md` and the relevant `.claude/skills/*.md` files. These are the source of truth for how Claude interacts with the project.
+
+2. **No backward-compat shims.** When moving code, delete the old location. Do not leave re-export shims behind. Update all imports and patch targets in tests to point to the canonical location.
+
+3. **Tests should be realistic.** Prefer testing pure functions directly without mocking. Only mock at the subprocess boundary (global, gtags, ctags, rg). Never mock private implementation details just to make tests pass — if a test requires patching internal aliases, the code structure is wrong.
+
+4. **One source of truth for shared code.** Shared constants (LEXER_MAP), utilities (load_overrides, detect_language), and exceptions all live in top-level modules (`lang.py`, `errors.py`). Skills import from there — never duplicate.
