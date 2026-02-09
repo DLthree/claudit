@@ -11,15 +11,10 @@ from __future__ import annotations
 from typing import Any
 
 from claudit.errors import GraphNotFoundError
-from claudit.lang import detect_language
-from claudit.skills.graph import build as _build_graph, _load_overrides
-from claudit.skills.graph.cache import load_call_graph as _load_graph
-from claudit.skills.path.pathfinder import (
-    find_all_paths,
-    annotate_path,
-    Hop,
-    CallPath,
-)
+from claudit.lang import load_overrides
+from claudit.skills.graph import build as build_graph
+from claudit.skills.graph.cache import load_call_graph
+from claudit.skills.path.pathfinder import find_all_paths, annotate_path
 
 
 def find(
@@ -33,41 +28,30 @@ def find(
     language: str | None = None,
     overrides_path: str | None = None,
 ) -> dict[str, Any]:
-    """Find all call paths from source to target function.
-
-    Returns dict with keys: source, target, paths, path_count, cache_used.
-    """
-    from pathlib import Path
-
-    # Load or build graph
+    """Find all call paths from source to target function."""
     cache_used = False
-    graph = _load_graph(project_dir)
-
-    overrides = _load_overrides(overrides_path)
+    graph = load_call_graph(project_dir)
+    overrides = load_overrides(overrides_path)
 
     if graph is not None and overrides is None:
         cache_used = True
     else:
-        if not auto_build:
-            if graph is None:
-                raise GraphNotFoundError(
-                    f"No call graph found. Run: claudit graph build {project_dir}"
-                )
-        # Build graph (this also ensures index exists)
-        _build_graph(
+        if not auto_build and graph is None:
+            raise GraphNotFoundError(
+                f"No call graph found. Run: claudit graph build {project_dir}"
+            )
+        build_graph(
             project_dir,
             language=language,
             overrides_path=overrides_path,
             force=(overrides is not None),
         )
-        graph = _load_graph(project_dir)
+        graph = load_call_graph(project_dir)
         if graph is None:
             graph = {}
 
-    # Find paths
     raw_paths = find_all_paths(graph, source, target, max_depth)
 
-    # Annotate if requested
     paths = []
     for rp in raw_paths:
         if annotate:

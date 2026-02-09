@@ -16,22 +16,15 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from pygments.lexers import CLexer, JavaLexer, PythonLexer
 from pygments.token import Token
 
+from claudit.lang import LEXER_MAP
 from claudit.skills.index.indexer import (
     FunctionDef,
     find_definition,
     get_function_body,
     list_symbols,
 )
-
-
-LEXER_MAP = {
-    "c": CLexer,
-    "java": JavaLexer,
-    "python": PythonLexer,
-}
 
 
 def build_call_graph(

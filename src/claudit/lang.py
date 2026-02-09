@@ -1,8 +1,10 @@
-"""Language detection utilities shared across skills."""
+"""Language detection and Pygments lexer mapping shared across skills."""
 
 from __future__ import annotations
 
 from pathlib import Path
+
+from pygments.lexers import CLexer, JavaLexer, PythonLexer
 
 
 EXT_MAP = {
@@ -10,6 +12,12 @@ EXT_MAP = {
     ".h": "c",
     ".java": "java",
     ".py": "python",
+}
+
+LEXER_MAP = {
+    "c": CLexer,
+    "java": JavaLexer,
+    "python": PythonLexer,
 }
 
 
@@ -27,3 +35,17 @@ def detect_language(project_dir: str) -> str:
         return "c"  # default
 
     return max(counts, key=lambda k: counts[k])
+
+
+def load_overrides(path: str | None) -> dict[str, list[str]] | None:
+    """Load manual override edges from a JSON file."""
+    if path is None:
+        return None
+    import json
+    p = Path(path)
+    if not p.exists():
+        return None
+    data = json.loads(p.read_text())
+    if not isinstance(data, dict):
+        return None
+    return data

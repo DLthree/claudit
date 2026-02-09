@@ -6,21 +6,14 @@ from typing import Any
 
 from pygments import highlight as _pygments_highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import CLexer, JavaLexer, PythonLexer, get_lexer_by_name
+from pygments.lexers import get_lexer_by_name
 
-from claudit.lang import detect_language
+from claudit.lang import detect_language, LEXER_MAP
 from claudit.skills.index.indexer import (
     find_definition,
     get_function_body,
     FunctionBody,
 )
-
-
-LEXER_MAP = {
-    "c": CLexer,
-    "java": JavaLexer,
-    "python": PythonLexer,
-}
 
 # Distinct colors for hop visualization
 HOP_COLORS = [
