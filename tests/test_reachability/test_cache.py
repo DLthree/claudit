@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from claudit.skills.reachability.cache import (
+from claudit.skills.graph.cache import (
     load_call_graph,
     save_call_graph,
     load_global_results,
@@ -21,7 +21,7 @@ class TestCallGraphCache:
         graph = {"a": ["b", "c"], "b": ["d"]}
 
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=100.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=100.0
         ):
             save_call_graph(project_dir, graph)
             loaded = load_call_graph(project_dir)
@@ -33,13 +33,13 @@ class TestCallGraphCache:
         graph = {"a": ["b"]}
 
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=100.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=100.0
         ):
             save_call_graph(project_dir, graph)
 
         # Now GTAGS mtime changed
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=200.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=200.0
         ):
             loaded = load_call_graph(project_dir)
 
@@ -48,7 +48,7 @@ class TestCallGraphCache:
     def test_no_cache_returns_none(self, tmp_path):
         project_dir = str(tmp_path)
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=0.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=0.0
         ):
             loaded = load_call_graph(project_dir)
         assert loaded is None
@@ -60,7 +60,7 @@ class TestGlobalResultsCache:
         results = {"symbols": ["foo", "bar"], "defs": {"foo": "main.c:1"}}
 
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=100.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=100.0
         ):
             save_global_results(project_dir, results)
             loaded = load_global_results(project_dir)
@@ -72,12 +72,12 @@ class TestGlobalResultsCache:
         results = {"symbols": ["foo"]}
 
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=100.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=100.0
         ):
             save_global_results(project_dir, results)
 
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=200.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=200.0
         ):
             loaded = load_global_results(project_dir)
 
@@ -86,7 +86,7 @@ class TestGlobalResultsCache:
     def test_no_cache_returns_none(self, tmp_path):
         project_dir = str(tmp_path)
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=0.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=0.0
         ):
             loaded = load_global_results(project_dir)
         assert loaded is None
@@ -117,7 +117,7 @@ class TestCacheHelpers:
     def test_cache_key_includes_mtime(self, tmp_path):
         project_dir = str(tmp_path)
         with patch(
-            "claudit.skills.reachability.cache.gtags_mtime", return_value=42.0
+            "claudit.skills.graph.cache.gtags_mtime", return_value=42.0
         ):
             key = _cache_key(project_dir)
         assert "42.0" in key

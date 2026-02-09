@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from claudit.skills.reachability.pathfinder import (
+from claudit.skills.path.pathfinder import (
     find_all_paths,
     annotate_path,
     _read_line,
@@ -97,10 +97,10 @@ class TestAnnotatePath:
     def test_annotates_with_definition(self):
         defs = [FunctionDef(name="foo", file="main.c", line=10)]
         with patch(
-            "claudit.skills.reachability.pathfinder.find_definition",
+            "claudit.skills.path.pathfinder.find_definition",
             return_value=defs,
         ), patch(
-            "claudit.skills.reachability.pathfinder._read_line",
+            "claudit.skills.path.pathfinder._read_line",
             return_value="void foo() {",
         ):
             cp = annotate_path(["foo"], "/proj")
@@ -112,7 +112,7 @@ class TestAnnotatePath:
 
     def test_annotates_unknown_when_no_def(self):
         with patch(
-            "claudit.skills.reachability.pathfinder.find_definition",
+            "claudit.skills.path.pathfinder.find_definition",
             return_value=[],
         ):
             cp = annotate_path(["unknown_func"], "/proj")
@@ -126,10 +126,10 @@ class TestAnnotatePath:
             return [FunctionDef(name=name, file=f"{name}.c", line=1)]
 
         with patch(
-            "claudit.skills.reachability.pathfinder.find_definition",
+            "claudit.skills.path.pathfinder.find_definition",
             side_effect=mock_find_def,
         ), patch(
-            "claudit.skills.reachability.pathfinder._read_line",
+            "claudit.skills.path.pathfinder._read_line",
             return_value="code",
         ):
             cp = annotate_path(["a", "b", "c"], "/proj")

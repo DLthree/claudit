@@ -4,15 +4,15 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from claudit.skills.reachability.callgraph import (
+from claudit.skills.graph.callgraph import (
     _extract_calls_from_source,
     _resolve_c_function_pointers,
     _find_enclosing_function,
     build_call_graph,
     _callees_of,
-    detect_language,
 )
-from claudit.skills.reachability.indexer import FunctionDef, FunctionBody
+from claudit.lang import detect_language
+from claudit.skills.index.indexer import FunctionDef, FunctionBody
 
 
 class TestExtractCallsC:
@@ -144,10 +144,10 @@ class TestCalleesOf:
             source="void foo() {\n    bar();\n}",
         )
         with patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[func_def],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=func_body,
         ):
             calls = _callees_of("foo", "/proj", "c", {"foo", "bar"})
@@ -155,7 +155,7 @@ class TestCalleesOf:
 
     def test_no_definition_returns_empty(self):
         with patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[],
         ):
             calls = _callees_of("foo", "/proj", "c", {"foo", "bar"})
@@ -164,10 +164,10 @@ class TestCalleesOf:
     def test_no_body_returns_empty(self):
         func_def = FunctionDef(name="foo", file="main.c", line=1)
         with patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[func_def],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=None,
         ):
             calls = _callees_of("foo", "/proj", "c", {"foo", "bar"})
@@ -179,10 +179,10 @@ class TestCalleesOf:
             file="main.c", start_line=1, end_line=1, source="   "
         )
         with patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[func_def],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=func_body,
         ):
             calls = _callees_of("foo", "/proj", "c", {"foo", "bar"})
@@ -199,16 +199,16 @@ class TestBuildCallGraph:
             source="void foo() {\n    bar();\n}",
         )
         with patch(
-            "claudit.skills.reachability.callgraph.list_symbols",
+            "claudit.skills.graph.callgraph.list_symbols",
             return_value=["foo", "bar"],
         ), patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[func_def],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=func_body,
         ), patch(
-            "claudit.skills.reachability.callgraph._resolve_c_function_pointers",
+            "claudit.skills.graph.callgraph._resolve_c_function_pointers",
             return_value={},
         ):
             graph = build_call_graph("/proj", "c")
@@ -217,16 +217,16 @@ class TestBuildCallGraph:
 
     def test_with_overrides(self):
         with patch(
-            "claudit.skills.reachability.callgraph.list_symbols",
+            "claudit.skills.graph.callgraph.list_symbols",
             return_value=["foo", "bar"],
         ), patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=None,
         ), patch(
-            "claudit.skills.reachability.callgraph._resolve_c_function_pointers",
+            "claudit.skills.graph.callgraph._resolve_c_function_pointers",
             return_value={},
         ):
             overrides = {"foo": ["bar", "baz"]}
@@ -245,16 +245,16 @@ class TestBuildCallGraph:
             source="void foo() {\n    bar();\n}",
         )
         with patch(
-            "claudit.skills.reachability.callgraph.list_symbols",
+            "claudit.skills.graph.callgraph.list_symbols",
             return_value=["foo", "bar", "baz"],
         ), patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[func_def],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=func_body,
         ), patch(
-            "claudit.skills.reachability.callgraph._resolve_c_function_pointers",
+            "claudit.skills.graph.callgraph._resolve_c_function_pointers",
             return_value={},
         ):
             # foo already calls bar from source; override adds baz
@@ -266,16 +266,16 @@ class TestBuildCallGraph:
     def test_c_function_pointers_merged(self):
         fp_edges = {"init": ["handler"]}
         with patch(
-            "claudit.skills.reachability.callgraph.list_symbols",
+            "claudit.skills.graph.callgraph.list_symbols",
             return_value=["init", "handler"],
         ), patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=None,
         ), patch(
-            "claudit.skills.reachability.callgraph._resolve_c_function_pointers",
+            "claudit.skills.graph.callgraph._resolve_c_function_pointers",
             return_value=fp_edges,
         ):
             graph = build_call_graph("/proj", "c")
@@ -284,16 +284,16 @@ class TestBuildCallGraph:
 
     def test_python_skips_function_pointers(self):
         with patch(
-            "claudit.skills.reachability.callgraph.list_symbols",
+            "claudit.skills.graph.callgraph.list_symbols",
             return_value=["foo"],
         ), patch(
-            "claudit.skills.reachability.callgraph.find_definition",
+            "claudit.skills.graph.callgraph.find_definition",
             return_value=[],
         ), patch(
-            "claudit.skills.reachability.callgraph.get_function_body",
+            "claudit.skills.graph.callgraph.get_function_body",
             return_value=None,
         ), patch(
-            "claudit.skills.reachability.callgraph._resolve_c_function_pointers",
+            "claudit.skills.graph.callgraph._resolve_c_function_pointers",
         ) as mock_fp:
             graph = build_call_graph("/proj", "python")
         mock_fp.assert_not_called()
@@ -312,7 +312,7 @@ class TestResolveCFunctionPointers:
         with patch("shutil.which", return_value="/usr/bin/rg"), \
              patch("subprocess.run", return_value=mock_rg_result), \
              patch(
-                 "claudit.skills.reachability.callgraph._find_enclosing_function",
+                 "claudit.skills.graph.callgraph._find_enclosing_function",
                  return_value="init_module",
              ):
             result = _resolve_c_function_pointers(str(tmp_path), {"my_func"})
@@ -335,7 +335,7 @@ class TestResolveCFunctionPointers:
         with patch("shutil.which", return_value="/usr/bin/rg"), \
              patch("subprocess.run", return_value=mock_rg_result), \
              patch(
-                 "claudit.skills.reachability.callgraph._find_enclosing_function",
+                 "claudit.skills.graph.callgraph._find_enclosing_function",
                  return_value=None,
              ):
             result = _resolve_c_function_pointers(str(tmp_path), {"my_func"})

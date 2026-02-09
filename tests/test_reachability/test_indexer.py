@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from claudit.skills.reachability.indexer import (
+from claudit.skills.index.indexer import (
     FunctionDef,
     FunctionBody,
     GlobalNotFoundError,
@@ -38,7 +38,7 @@ class TestEnsureIndex:
     def test_runs_gtags_when_missing(self, tmp_path):
         """If GTAGS is missing, gtags should be invoked."""
         mock_result = MagicMock(returncode=0, stderr="")
-        with patch("claudit.skills.reachability.indexer._check_gtags", return_value="/usr/bin/gtags"), \
+        with patch("claudit.skills.index.indexer._check_gtags", return_value="/usr/bin/gtags"), \
              patch("subprocess.run", return_value=mock_result) as mock_run:
             root = ensure_index(str(tmp_path))
         assert root == tmp_path.resolve()
@@ -49,7 +49,7 @@ class TestEnsureIndex:
     def test_raises_on_gtags_failure(self, tmp_path):
         """If gtags exits non-zero, IndexingError is raised."""
         mock_result = MagicMock(returncode=1, stderr="some error")
-        with patch("claudit.skills.reachability.indexer._check_gtags", return_value="/usr/bin/gtags"), \
+        with patch("claudit.skills.index.indexer._check_gtags", return_value="/usr/bin/gtags"), \
              patch("subprocess.run", return_value=mock_result):
             with pytest.raises(IndexingError, match="gtags failed"):
                 ensure_index(str(tmp_path))
@@ -95,7 +95,7 @@ class TestFindDefinition:
             stdout="main.c:10: int foo(void) {\nutil.c:20: void foo(int x) {",
             returncode=0,
         )
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             defs = find_definition("foo", str(tmp_path))
 
@@ -108,7 +108,7 @@ class TestFindDefinition:
 
     def test_empty_output(self, tmp_path):
         mock_result = MagicMock(stdout="", returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             defs = find_definition("nonexistent", str(tmp_path))
         assert defs == []
@@ -123,7 +123,7 @@ class TestFindReferences:
             stdout="caller.c:15: foo(args);\ncaller2.c:30: foo();",
             returncode=0,
         )
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             refs = find_references("foo", str(tmp_path))
 
@@ -135,7 +135,7 @@ class TestFindReferences:
 
     def test_empty_output(self, tmp_path):
         mock_result = MagicMock(stdout="", returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             refs = find_references("nonexistent", str(tmp_path))
         assert refs == []
@@ -147,14 +147,14 @@ class TestFindReferences:
 class TestListSymbols:
     def test_parses_output(self, tmp_path):
         mock_result = MagicMock(stdout="foo\nbar\nbaz\n", returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             symbols = list_symbols(str(tmp_path))
         assert symbols == ["foo", "bar", "baz"]
 
     def test_empty_output(self, tmp_path):
         mock_result = MagicMock(stdout="", returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_global", return_value="/usr/bin/global"), \
+        with patch("claudit.skills.index.indexer._check_global", return_value="/usr/bin/global"), \
              patch("subprocess.run", return_value=mock_result):
             symbols = list_symbols(str(tmp_path))
         assert symbols == []
@@ -175,7 +175,7 @@ class TestCtagsTags:
             '{"_type": "tag", "name": "bar", "line": 2, "kind": "function", "end": 4}\n'
         )
         mock_result = MagicMock(stdout=ctags_output, returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_ctags", return_value="/usr/bin/ctags"), \
+        with patch("claudit.skills.index.indexer._check_ctags", return_value="/usr/bin/ctags"), \
              patch("subprocess.run", return_value=mock_result):
             tags = get_ctags_tags(str(src))
 
@@ -193,7 +193,7 @@ class TestCtagsTags:
             '\n'
         )
         mock_result = MagicMock(stdout=ctags_output, returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_ctags", return_value="/usr/bin/ctags"), \
+        with patch("claudit.skills.index.indexer._check_ctags", return_value="/usr/bin/ctags"), \
              patch("subprocess.run", return_value=mock_result):
             tags = get_ctags_tags(str(src))
 
@@ -204,7 +204,7 @@ class TestCtagsTags:
         src = tmp_path / "empty.c"
         src.write_text("")
         mock_result = MagicMock(stdout="", returncode=0)
-        with patch("claudit.skills.reachability.indexer._check_ctags", return_value="/usr/bin/ctags"), \
+        with patch("claudit.skills.index.indexer._check_ctags", return_value="/usr/bin/ctags"), \
              patch("subprocess.run", return_value=mock_result):
             tags = get_ctags_tags(str(src))
         assert tags == []
@@ -220,7 +220,7 @@ class TestCtagsFunctionBounds:
         tags = [
             {"_type": "tag", "name": "foo", "line": 1, "kind": "function", "end": 3},
         ]
-        with patch("claudit.skills.reachability.indexer.get_ctags_tags", return_value=tags):
+        with patch("claudit.skills.index.indexer.get_ctags_tags", return_value=tags):
             bounds = _ctags_function_bounds(str(src), "foo", 1)
         assert bounds == (1, 3)
 
@@ -230,7 +230,7 @@ class TestCtagsFunctionBounds:
         tags = [
             {"_type": "tag", "name": "foo", "line": 5, "kind": "function", "end": 10},
         ]
-        with patch("claudit.skills.reachability.indexer.get_ctags_tags", return_value=tags):
+        with patch("claudit.skills.index.indexer.get_ctags_tags", return_value=tags):
             # start_line=1 doesn't match line=5, but fallback matches on name
             bounds = _ctags_function_bounds(str(src), "foo", 1)
         assert bounds == (5, 10)
@@ -241,7 +241,7 @@ class TestCtagsFunctionBounds:
         tags = [
             {"_type": "tag", "name": "bar", "line": 1, "kind": "function", "end": 3},
         ]
-        with patch("claudit.skills.reachability.indexer.get_ctags_tags", return_value=tags):
+        with patch("claudit.skills.index.indexer.get_ctags_tags", return_value=tags):
             bounds = _ctags_function_bounds(str(src), "foo", 1)
         assert bounds is None
 
@@ -251,7 +251,7 @@ class TestCtagsFunctionBounds:
         tags = [
             {"_type": "tag", "name": "foo", "line": 1, "kind": "function"},
         ]
-        with patch("claudit.skills.reachability.indexer.get_ctags_tags", return_value=tags):
+        with patch("claudit.skills.index.indexer.get_ctags_tags", return_value=tags):
             bounds = _ctags_function_bounds(str(src), "foo", 1)
         assert bounds is None
 
@@ -267,7 +267,7 @@ class TestGetFunctionBody:
         src.write_text("void foo() {\n    bar();\n}\nvoid other() {\n    baz();\n}\n")
         func = FunctionDef(name="foo", file="main.c", line=1)
         with patch(
-            "claudit.skills.reachability.indexer._ctags_function_bounds",
+            "claudit.skills.index.indexer._ctags_function_bounds",
             return_value=(1, 3),
         ):
             body = get_function_body(func, str(tmp_path), "c")
@@ -287,7 +287,7 @@ class TestGetFunctionBody:
         src.write_text("void foo() { bar(); }")
         func = FunctionDef(name="foo", file="main.c", line=1)
         with patch(
-            "claudit.skills.reachability.indexer._ctags_function_bounds",
+            "claudit.skills.index.indexer._ctags_function_bounds",
             return_value=None,
         ):
             body = get_function_body(func, str(tmp_path), "c")
@@ -298,7 +298,7 @@ class TestGetFunctionBody:
         src.write_text("line1\nline2\n")
         func = FunctionDef(name="foo", file="main.c", line=1)
         with patch(
-            "claudit.skills.reachability.indexer._ctags_function_bounds",
+            "claudit.skills.index.indexer._ctags_function_bounds",
             return_value=(1, 100),  # end_line way beyond file
         ):
             body = get_function_body(func, str(tmp_path), "c")
@@ -313,27 +313,27 @@ class TestErrorClasses:
     def test_global_not_found_error(self):
         with patch("shutil.which", return_value=None):
             with pytest.raises(GlobalNotFoundError, match="GNU Global"):
-                from claudit.skills.reachability.indexer import _check_global
+                from claudit.skills.index.indexer import _check_global
                 _check_global()
 
     def test_ctags_not_found_error(self):
         with patch("shutil.which", return_value=None):
             with pytest.raises(CtagsNotFoundError, match="Universal Ctags"):
-                from claudit.skills.reachability.indexer import _check_ctags
+                from claudit.skills.index.indexer import _check_ctags
                 _check_ctags()
 
     def test_check_global_returns_path(self):
         with patch("shutil.which", return_value="/usr/bin/global"):
-            from claudit.skills.reachability.indexer import _check_global
+            from claudit.skills.index.indexer import _check_global
             assert _check_global() == "/usr/bin/global"
 
     def test_check_gtags_returns_path(self):
         with patch("shutil.which", return_value="/usr/bin/gtags"):
-            from claudit.skills.reachability.indexer import _check_gtags
+            from claudit.skills.index.indexer import _check_gtags
             assert _check_gtags() == "/usr/bin/gtags"
 
     def test_check_gtags_raises(self):
         with patch("shutil.which", return_value=None):
             with pytest.raises(GlobalNotFoundError):
-                from claudit.skills.reachability.indexer import _check_gtags
+                from claudit.skills.index.indexer import _check_gtags
                 _check_gtags()
