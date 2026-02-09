@@ -19,11 +19,13 @@ def main(argv: list[str] | None = None) -> int:
     from claudit.skills.graph.cli import register as register_graph
     from claudit.skills.path.cli import register as register_path
     from claudit.skills.highlight.cli import register as register_highlight
+    from claudit.skills.harness.cli import register as register_harness
 
     register_index(sub)
     register_graph(sub)
     register_path(sub)
     register_highlight(sub)
+    register_harness(sub)
 
     args = parser.parse_args(argv)
 
@@ -36,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         "graph": "claudit.skills.graph.cli",
         "path": "claudit.skills.path.cli",
         "highlight": "claudit.skills.highlight.cli",
+        "harness": "claudit.skills.harness.cli",
     }
 
     if args.command in skill_dispatch:
