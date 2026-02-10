@@ -1,3 +1,8 @@
+---
+name: harness
+description: Create standalone test harnesses through iterative, LLM-guided extraction and compilation. Use when the user asks to create a harness for a function, extract code for standalone testing, or create an isolated test environment.
+---
+
 # Test Harness Generation
 
 Create standalone test harnesses through iterative, LLM-guided extraction and compilation.

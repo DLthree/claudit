@@ -1,3 +1,8 @@
+---
+name: index
+description: Manage GNU Global indexes for code analysis. Use when the user asks to index a project, list symbols, find where a function is defined, show function source, or find references to a symbol.
+---
+
 # Index Management
 
 Manage GNU Global indexes for code analysis.

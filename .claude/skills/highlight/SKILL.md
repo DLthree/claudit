@@ -1,3 +1,8 @@
+---
+name: highlight
+description: Syntax-highlight source code with per-hop color annotations for call path visualization. Use when the user asks to highlight code along a call path, show highlighted source of a function, or visualize call chains.
+---
+
 # Source Highlighting
 
 Syntax-highlighted source code with per-hop color annotations for call path visualization.

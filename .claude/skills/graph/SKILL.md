@@ -1,3 +1,8 @@
+---
+name: graph
+description: Build and query call graphs showing which functions call which. Use when the user asks to build a call graph, find callees/callers of a function, or show the full call graph.
+---
+
 # Call Graph Operations
 
 Build and query call graphs showing which functions call which.

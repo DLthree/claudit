@@ -1,3 +1,8 @@
+---
+name: path
+description: Find call paths between two functions using BFS over the call graph. Use when the user asks if function X can reach Y, what paths exist from X to Y, or how X eventually calls Y.
+---
+
 # Call Path Finding
 
 Find call paths between two functions using BFS over the call graph.
