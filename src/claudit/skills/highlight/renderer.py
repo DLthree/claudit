@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from pygments import highlight as _pygments_highlight
@@ -13,7 +15,10 @@ from claudit.skills.index.indexer import (
     find_definition,
     get_function_body,
     FunctionBody,
+    FunctionDef,
 )
+
+RESULTS_FORMAT_VERSION = "0.1.0"
 
 # Distinct colors for hop visualization
 HOP_COLORS = [
@@ -28,6 +33,17 @@ HOP_COLORS = [
     "#BB8FCE",  # lavender
     "#85C1E9",  # sky
 ]
+
+
+def _hex_to_rgba(hex_color: str, alpha: float = 0.3) -> str:
+    """Convert a hex color like '#FF6B6B' to rgba(r, g, b, alpha)."""
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) != 6:
+        return f"rgba(0, 0, 0, {alpha})"
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r}, {g}, {b}, {alpha})"
 
 
 def highlight_function(
@@ -72,80 +88,91 @@ def highlight_path(
     language: str | None = None,
     style: str = "monokai",
 ) -> dict[str, Any]:
-    """Highlight all functions in a call path with per-hop colors and notes.
+    """Produce a result set for a call path in RESULTS_FORMAT (metadata + results).
 
-    Args:
-        path: List of function names forming the call path.
+    Each result is a single span: either a function definition or a call site.
+    Only these call-chain locations are included, not full function bodies.
 
-    Returns dict with highlights array and metadata.
+    Returns dict with metadata and results conforming to RESULTS_FORMAT.
     """
     if language is None:
         language = detect_language(project_dir)
 
-    highlights: list[dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
+    result_id = 0
 
     for hop_index, func_name in enumerate(path):
-        color = HOP_COLORS[hop_index % len(HOP_COLORS)]
-        entry: dict[str, Any] = {
-            "function": func_name,
-            "hop_index": hop_index,
-            "color": color,
-        }
+        color_hex = HOP_COLORS[hop_index % len(HOP_COLORS)]
+        color_rgba = _hex_to_rgba(color_hex)
+        note = _build_hop_note(hop_index, func_name, path)
 
         defs = find_definition(func_name, project_dir)
         if not defs:
-            entry.update({
-                "file": "<unknown>",
-                "start_line": 0,
-                "end_line": 0,
-                "source": "",
-                "highlighted_html": "",
-                "note": f"Definition not found for '{func_name}'",
+            result_id += 1
+            results.append({
+                "ID": str(result_id),
+                "description": f"definition of {func_name}",
+                "notes": f"Definition not found for '{func_name}'",
+                "category": "Call path",
+                "severity": "info",
+                "filename": "<unknown>",
+                "linenum": 0,
+                "col_start": 1,
+                "col_end": 1,
+                "function": func_name,
+                "color": color_rgba,
             })
-            highlights.append(entry)
             continue
 
-        body = get_function_body(defs[0], project_dir, language)
-        if body is None:
-            entry.update({
-                "file": defs[0].file,
-                "start_line": defs[0].line,
-                "end_line": defs[0].line,
-                "source": "",
-                "highlighted_html": "",
-                "note": f"Could not extract body for '{func_name}'",
-            })
-            highlights.append(entry)
-            continue
+        func_def = defs[0]
+        linenum, col_start, col_end = _definition_span(func_def, project_dir)
 
-        highlighted_html = _highlight_source(body.source, language, style)
+        result_id += 1
+        results.append({
+            "ID": str(result_id),
+            "description": f"definition of {func_name}",
+            "notes": note,
+            "category": "Call path",
+            "severity": "info",
+            "filename": func_def.file,
+            "linenum": linenum,
+            "col_start": col_start,
+            "col_end": col_end,
+            "function": func_name,
+            "color": color_rgba,
+        })
 
-        # Build a note describing this hop's role in the path
-        note = _build_hop_note(hop_index, func_name, path)
-
-        # Find the call site to the next function in the path
-        call_site = None
         if hop_index < len(path) - 1:
             next_func = path[hop_index + 1]
-            call_site = _find_call_site(body, next_func)
+            body = get_function_body(func_def, project_dir, language)
+            if body is not None:
+                call_site = _find_call_site(body, next_func)
+                if call_site is not None:
+                    result_id += 1
+                    results.append({
+                        "ID": str(result_id),
+                        "description": f"call to {next_func}",
+                        "notes": note,
+                        "category": "Call path",
+                        "severity": "info",
+                        "filename": body.file,
+                        "linenum": call_site["line"],
+                        "col_start": call_site["col_start"],
+                        "col_end": call_site["col_end"],
+                        "function": func_name,
+                        "color": color_rgba,
+                    })
 
-        entry.update({
-            "file": body.file,
-            "start_line": body.start_line,
-            "end_line": body.end_line,
-            "source": body.source,
-            "highlighted_html": highlighted_html,
-            "note": note,
-        })
-        if call_site is not None:
-            entry["call_site"] = call_site
-
-        highlights.append(entry)
+    metadata = {
+        "author": "claudit highlight",
+        "timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
+        "tool": "claudit",
+        "version": RESULTS_FORMAT_VERSION,
+    }
 
     return {
-        "highlights": highlights,
-        "style": style,
-        "path_length": len(path),
+        "metadata": metadata,
+        "results": results,
     }
 
 
@@ -164,6 +191,37 @@ def _highlight_source(source: str, language: str, style: str) -> str:
     return _pygments_highlight(source, lexer, formatter)
 
 
+def _definition_span(
+    func_def: FunctionDef, project_dir: str, definition_line: str | None = None
+) -> tuple[int, int, int]:
+    """Return (linenum, col_start, col_end) 1-based for the function name on its definition line.
+
+    If definition_line is not provided, the line is read from the file.
+    If the function name cannot be found, returns whole line: col_start=1, col_end=len(line).
+    """
+    line = definition_line
+    if line is None:
+        root = Path(project_dir).resolve()
+        filepath = root / func_def.file
+        if not filepath.exists():
+            return (func_def.line, 1, 1)
+        try:
+            lines = filepath.read_text(errors="replace").splitlines()
+        except OSError:
+            return (func_def.line, 1, 1)
+        idx = func_def.line - 1
+        if idx < 0 or idx >= len(lines):
+            return (func_def.line, 1, 1)
+        line = lines[idx]
+    name = func_def.name
+    idx = line.find(name)
+    if idx == -1:
+        return (func_def.line, 1, max(1, len(line)))
+    col_start = idx + 1
+    col_end = idx + len(name)
+    return (func_def.line, col_start, col_end)
+
+
 def _build_hop_note(hop_index: int, func_name: str, path: list[str]) -> str:
     """Build a human-readable note for a hop in the path."""
     if hop_index == 0:
@@ -179,13 +237,29 @@ def _build_hop_note(hop_index: int, func_name: str, path: list[str]) -> str:
 def _find_call_site(
     body: FunctionBody, callee_name: str
 ) -> dict[str, Any] | None:
-    """Find where in the function body the callee is called."""
+    """Find where in the function body the callee is called.
+
+    Returns line, col_start, col_end (1-based; col_end inclusive), preferring
+    the occurrence of callee_name that is followed by '(' (actual call).
+    """
     lines = body.source.splitlines()
     for i, line in enumerate(lines):
-        if callee_name in line and "(" in line:
-            return {
-                "line": body.start_line + i,
-                "callee": callee_name,
-                "snippet": line.strip(),
-            }
+        idx = 0
+        while True:
+            idx = line.find(callee_name, idx)
+            if idx == -1:
+                break
+            end = idx + len(callee_name)
+            rest = line[end:].lstrip()
+            if rest.startswith("("):
+                col_start = idx + 1
+                col_end = idx + len(callee_name)  # 1-based inclusive
+                return {
+                    "line": body.start_line + i,
+                    "col_start": col_start,
+                    "col_end": col_end,
+                    "callee": callee_name,
+                    "snippet": line.strip(),
+                }
+            idx = end
     return None
