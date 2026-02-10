@@ -17,9 +17,13 @@ Use this skill when the user asks:
 
 ## How to invoke
 
+**Invocation:** Use the `claudit` CLI only. Do not run `python -m claudit.skills.path`.
+
 ```bash
 claudit path find <source> <target> <project_dir> [--language c|java|python] [--max-depth 10] [--overrides path.json]
 ```
+
+- `--language` and `--max-depth N` (default 10) apply to `claudit path find` only.
 
 ```python
 from claudit.skills.path import find
@@ -53,3 +57,15 @@ result = find("/path/to/project", "main", "vulnerable_func", max_depth=10)
 - Auto-builds the call graph and index if they don't exist.
 - Empty `paths` array means no reachable path within the depth limit.
 - Use `--max-depth` to control how deep the BFS searches.
+
+## Limitations
+
+- GNU Global can miss edges across Java interface → implementation (e.g. a call in the impl is not attributed to the interface). If `path find` returns 0 paths, the path may still exist; verify by reading source and/or using `claudit graph callees` and `claudit graph callers`.
+
+## When path find returns no paths
+
+1. Run `claudit path find <src> <tgt> <dir>` first.
+2. If 0 paths, run `claudit graph callees <src> <dir>` to see direct callees.
+3. Run `claudit graph callers <tgt> <dir>` to see callers of the target.
+4. Read source of promising intermediate functions to find the missing edge.
+5. Once the chain is confirmed, pass the hop list to `claudit highlight path ... --project-dir <dir>`.

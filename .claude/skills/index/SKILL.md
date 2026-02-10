@@ -18,6 +18,8 @@ Use this skill when the user asks:
 
 ## How to invoke
 
+**Invocation:** Use the `claudit` CLI only. Do not run `python -m claudit.skills.index`.
+
 ```bash
 claudit index create <project_dir> [--force]
 claudit index list-symbols <project_dir>

@@ -77,7 +77,7 @@ from claudit.skills.harness import (
 
 ## CLI (optional)
 
-For debugging or scripting. Primary use is from Claude via the Python API above.
+For debugging or scripting. Primary use is from Claude via the Python API above. Use the `claudit` CLI only; do not run `python -m claudit.skills.<name>` — those are packages, not runnable modules.
 
 ```bash
 claudit index create <project_dir> [--force]

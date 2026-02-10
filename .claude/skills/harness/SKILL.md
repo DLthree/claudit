@@ -155,6 +155,8 @@ Each iteration gets you closer to a working harness.
 
 ## CLI Commands
 
+**Invocation:** Use the `claudit` CLI only. Do not run `python -m claudit.skills.harness`.
+
 ```bash
 # Extract specific functions
 claudit harness extract <project_dir> --functions func1,func2 [--language c|java|python]

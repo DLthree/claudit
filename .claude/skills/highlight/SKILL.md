@@ -16,10 +16,14 @@ Use this skill when the user asks:
 
 ## How to invoke
 
+**Invocation:** Use the `claudit` CLI only. Do not run `python -m claudit.skills.highlight`.
+
 ```bash
 claudit highlight path <func1> <func2> <func3> --project-dir <dir> [--style monokai]
 claudit highlight function <func> --project-dir <dir> [--language c|java|python]
 ```
+
+The hop list for `highlight path` can come from `claudit path find` or from a manually confirmed chain when auto-discovery returns 0 paths (see path skill "When path find returns no paths" workflow).
 
 ```python
 from claudit.skills.highlight import highlight_path, highlight_function
