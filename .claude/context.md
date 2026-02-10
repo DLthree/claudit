@@ -2,7 +2,7 @@
 
 ## Overview
 
-claudit is a Python library and CLI tool that provides code auditing capabilities for Claude Code. It ships four composable skills — **index**, **graph**, **path**, and **highlight** — for analyzing call relationships in large codebases using GNU Global indexing and Pygments-based static analysis.
+claudit is a Python library that provides code auditing capabilities **invoked from inside Claude Code**. The agent uses the Python API (skill entry points); the CLI is optional (debugging/scripting). It ships five composable skills — **index**, **graph**, **path**, **highlight**, and **harness** — for analyzing call relationships in large codebases using GNU Global indexing and Pygments-based static analysis. The harness skill adds extraction and dependency analysis for building test harnesses (LLM-guided).
 
 ## Tech Stack
 
@@ -23,20 +23,26 @@ src/claudit/
     index/
       __init__.py                 # Public API: create, list_symbols, get_body, lookup
       indexer.py                  # GNU Global + ctags wrapper
-      cli.py                     # CLI registration for `claudit index`
+      cli.py                      # CLI registration for `claudit index`
     graph/
       __init__.py                 # Public API: build, show, callees, callers
-      callgraph.py               # Pygments-based call graph construction
-      cache.py                   # GTAGS mtime-keyed caching layer
-      cli.py                     # CLI registration for `claudit graph`
+      callgraph.py                # Pygments-based call graph construction
+      cache.py                    # GTAGS mtime-keyed caching layer
+      cli.py                      # CLI registration for `claudit graph`
     path/
       __init__.py                 # Public API: find
-      pathfinder.py              # BFS path finding with annotation
-      cli.py                     # CLI registration for `claudit path`
+      pathfinder.py               # BFS path finding with annotation
+      cli.py                      # CLI registration for `claudit path`
     highlight/
       __init__.py                 # Public API: highlight_path, highlight_function
-      renderer.py                # Pygments-based highlighting + annotations
-      cli.py                     # CLI registration for `claudit highlight`
+      renderer.py                 # Pygments-based highlighting + annotations
+      cli.py                      # CLI registration for `claudit highlight`
+    harness/
+      __init__.py                 # Public API: extract_*, list_functions_in_file, analyze_dependencies, get_function_signature, get_function_callees
+      extractor.py                # Extraction
+      dependency_analyzer.py      # Dependency analysis
+      signature_extractor.py      # Signatures
+      cli.py                      # CLI for `claudit harness` (optional/debugging)
 tests/
   conftest.py                    # Shared fixtures (c_project, python_project)
   test_cli.py                    # CLI dispatch tests
@@ -45,9 +51,33 @@ tests/
   test_graph/                    # test_callgraph.py, test_cache.py, test_api.py
   test_path/                     # test_pathfinder.py
   test_highlight/                # test_renderer.py
+  test_harness/                  # test_api.py, test_signature.py
 ```
 
-## CLI Commands
+## Python API (primary)
+
+Invocation is primarily via Claude Code using these entry points. All functions return plain dicts or dataclasses (JSON-serializable where applicable).
+
+```python
+from claudit.skills.index import create, list_symbols, get_body, lookup
+from claudit.skills.graph import build, show, callees, callers
+from claudit.skills.path import find
+from claudit.skills.highlight import highlight_path, highlight_function
+from claudit.skills.harness import (
+    extract_function,
+    extract_functions,
+    extract_file,
+    list_functions_in_file,
+    analyze_dependencies,
+    get_function_signature,
+    get_function_callees,
+)
+# Harness types: ExtractedFunction, DependencySet, FunctionSignature, Parameter
+```
+
+## CLI (optional)
+
+For debugging or scripting. Primary use is from Claude via the Python API above.
 
 ```bash
 claudit index create <project_dir> [--force]
@@ -64,18 +94,12 @@ claudit path find <source> <target> <project_dir> [--max-depth 10] [--language .
 
 claudit highlight path <func1> <func2> ... --project-dir <dir> [--style monokai]
 claudit highlight function <func> --project-dir <dir>
+
+claudit harness extract (--functions <names> | --file <path>) <project_dir> [--language c|java|python]
+claudit harness list-functions <project_dir> --file <path>
+claudit harness analyze-deps <project_dir> --functions <names> [--depth N]
+claudit harness get-signature <project_dir> --function <name> [--language c|java|python]
 ```
-
-## Python API
-
-```python
-from claudit.skills.index import create, list_symbols, get_body, lookup
-from claudit.skills.graph import build, show, callees, callers
-from claudit.skills.path import find
-from claudit.skills.highlight import highlight_path, highlight_function
-```
-
-All functions return plain dicts (JSON-serializable).
 
 ## Development Commands
 
@@ -88,10 +112,10 @@ pytest                     # Run tests with coverage
 ## Key Patterns
 
 - **Shared modules**: `errors.py` (exceptions), `lang.py` (language detection, LEXER_MAP, load_overrides)
-- **Each skill**: `__init__.py` (public API), implementation module, `cli.py`
-- **Dataclasses**: `FunctionDef`, `FunctionBody`, `Hop`, `CallPath`
+- **Each skill**: `__init__.py` (public API), implementation module(s), `cli.py`
+- **Dataclasses**: `FunctionDef`, `FunctionBody`, `Hop`, `CallPath`; harness: `ExtractedFunction`, `DependencySet`, `FunctionSignature`, `Parameter`
 - **Graph representation**: `dict[str, list[str]]` mapping callers to callees
-- **Dependency chain**: index -> graph -> path (each skill auto-ensures prerequisites by default)
+- **Dependency chain**: index → graph → path (each skill auto-ensures prerequisites by default); harness uses index + graph
 
 ## Rules for Making Changes
 
