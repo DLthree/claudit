@@ -1,19 +1,8 @@
 ---
 name: path
-description: Find call paths between two functions using BFS over the call graph. Use when the user asks if function X can reach Y, what paths exist from X to Y, or how X eventually calls Y.
+description: Find call paths between two functions using BFS over the call graph. Use when the user asks if function X can reach Y, what paths exist from X to Y, how X eventually calls Y, trace a call chain, or check reachability between functions.
+compatibility: Requires GNU Global and Universal Ctags (auto-ensures index and graph)
 ---
-
-# Call Path Finding
-
-Find call paths between two functions using BFS over the call graph.
-
-## When to use
-
-Use this skill when the user asks:
-- "Can function X reach function Y?"
-- "What are the call paths from X to Y?"
-- "How does function X eventually call function Y?"
-- "Is function Y reachable from function X?"
 
 ## How to invoke
 
@@ -60,7 +49,7 @@ result = find("/path/to/project", "main", "vulnerable_func", max_depth=10)
 
 ## Limitations
 
-- GNU Global can miss edges across Java interface → implementation (e.g. a call in the impl is not attributed to the interface). If `path find` returns 0 paths, the path may still exist; verify by reading source and/or using `claudit graph callees` and `claudit graph callers`.
+- GNU Global can miss edges across Java interface -> implementation (e.g. a call in the impl is not attributed to the interface). If `path find` returns 0 paths, the path may still exist; verify by reading source and/or using `claudit graph callees` and `claudit graph callers`.
 
 ## When path find returns no paths
 

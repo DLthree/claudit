@@ -1,18 +1,8 @@
 ---
 name: highlight
-description: Syntax-highlight source code with per-hop color annotations for call path visualization. Use when the user asks to highlight code along a call path, show highlighted source of a function, or visualize call chains.
+description: Syntax-highlight source code with per-hop color annotations for call path visualization. Use when the user asks to highlight code along a call path, show highlighted or annotated source of a function, visualize or color-code call chains, or produce Results Format output for editor integration.
+compatibility: Requires GNU Global, Universal Ctags, and Pygments
 ---
-
-# Source Highlighting
-
-Syntax-highlighted source code with per-hop color annotations for call path visualization.
-
-## When to use
-
-Use this skill when the user asks:
-- "Highlight the code along this call path"
-- "Show me the source of function X with syntax highlighting"
-- "Visualize the call chain from X to Y"
 
 ## How to invoke
 
@@ -37,7 +27,7 @@ result = highlight_function("/project", "main", language="c")
 
 ## Output format (highlight path)
 
-For **path**, the output conforms to the [Results Format](dev/RESULTS_FORMAT.md): top-level `metadata` and `results` array. Each entry in the call chain is represented by **only** the definition span and the call-site span(s)—not every line in the function body.
+For **path**, the output conforms to the [Results Format](dev/RESULTS_FORMAT.md): top-level `metadata` and `results` array. Each entry in the call chain is represented by **only** the definition span and the call-site span(s)---not every line in the function body.
 
 - **Definition span**: the line and column range where the function is **defined** (e.g. the function name).
 - **Call-site span**: for each hop except the last, the line and column range where the **next** function in the path is **called**.
