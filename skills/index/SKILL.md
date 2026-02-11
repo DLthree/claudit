@@ -1,20 +1,8 @@
 ---
 name: index
-description: Manage GNU Global indexes for code analysis. Use when the user asks to index a project, list symbols, find where a function is defined, show function source, or find references to a symbol.
+description: Manage GNU Global indexes for code analysis. Use when the user asks to index a project, list symbols, find where a function is defined, show function source, find references to a symbol, look up a symbol, or answer "what functions exist in this project".
+compatibility: Requires GNU Global (gtags/global) and Universal Ctags
 ---
-
-# Index Management
-
-Manage GNU Global indexes for code analysis.
-
-## When to use
-
-Use this skill when the user asks:
-- "Index this project" / "Create an index"
-- "What symbols are in this project?"
-- "Where is function X defined?"
-- "Show me the source of function X"
-- "What references function X?"
 
 ## How to invoke
 

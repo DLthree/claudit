@@ -1,19 +1,8 @@
 ---
 name: graph
-description: Build and query call graphs showing which functions call which. Use when the user asks to build a call graph, find callees/callers of a function, or show the full call graph.
+description: Build and query call graphs showing which functions call which. Use when the user asks to build a call graph, find callees or callers of a function, show the full call graph, check dependencies between functions, or answer "who calls X" / "what does X call".
+compatibility: Requires GNU Global; optional ripgrep for C function pointer resolution
 ---
-
-# Call Graph Operations
-
-Build and query call graphs showing which functions call which.
-
-## When to use
-
-Use this skill when the user asks:
-- "Build a call graph for this project"
-- "What does function X call?" / "What are the callees of X?"
-- "What calls function X?" / "What are the callers of X?"
-- "Show me the full call graph"
 
 ## How to invoke
 
