@@ -1,8 +1,22 @@
 ---
 name: path
-description: Find call paths between two functions using BFS over the call graph. Use when the user asks if function X can reach Y, what paths exist from X to Y, how X eventually calls Y, trace a call chain, or check reachability between functions.
+description: Find call paths between two functions using BFS over the call graph. Use this skill whenever the user wants to trace execution flow, verify reachability between functions, find call chains for security auditing (e.g. "can user input reach this sink?"), debug a crash, or understand how one function eventually leads to another. Invoke even when they say "trace", "how does X get to Y", "is Y reachable", "what's the execution path", or "find the call chain".
 compatibility: Requires GNU Global and Universal Ctags (auto-ensures index and graph)
 ---
+
+# Call Path Finding
+
+Find all call paths from a source function to a target function using breadth-first search. This is the go-to skill for reachability questions — it automatically builds the index and call graph if they don't already exist.
+
+## When to use
+
+Use this skill when the user asks:
+- "Can function X reach function Y?" / "Is Y reachable from X?"
+- "What are the call paths from X to Y?" / "How many ways can X reach Y?"
+- "How does function X eventually call function Y?"
+- "Trace the execution from X to Y"
+- "Can user input reach `strcpy`?" / security reachability questions
+- "What's the call stack that leads to Y?"
 
 ## How to invoke
 
@@ -12,7 +26,9 @@ compatibility: Requires GNU Global and Universal Ctags (auto-ensures index and g
 claudit path find <source> <target> <project_dir> [--language c|java|python] [--max-depth 10] [--overrides path.json]
 ```
 
-- `--language` and `--max-depth N` (default 10) apply to `claudit path find` only.
+- `--max-depth N` (default 10): controls BFS depth — shorter = faster but may miss longer paths; increase if you suspect the path exists but isn't being found
+- `--overrides path.json`: supply extra edges for dynamic dispatch (Java interfaces, C function pointers) that static analysis misses
+- `--language`: auto-detected if omitted
 
 ```python
 from claudit.skills.path import find

@@ -1,8 +1,20 @@
 ---
 name: harness
-description: Create standalone test harnesses through iterative, LLM-guided extraction and compilation. Use when the user asks to create a harness for a function, extract code for standalone testing, create an isolated test environment, pull out code for fuzzing, or stub dependencies for unit testing.
+description: Create standalone test harnesses through iterative, LLM-guided extraction and compilation. Use this skill whenever the user wants to test or fuzz a specific function in isolation, do security research on a function without running the whole application, extract code for standalone execution, create a minimal reproduction case, or build a performance benchmark for a specific routine. Invoke even when they say "extract function X", "isolate this code", "I want to fuzz this", "make this testable standalone", or "pull out just the auth logic".
 compatibility: Requires GNU Global and Universal Ctags
 ---
+
+## When to use
+
+Use this skill when the user asks:
+- "Create a harness for function X" / "Make function X testable"
+- "Extract this code and make it standalone"
+- "I want to fuzz this parser" / "Set up fuzzing for X"
+- "Create a minimal reproduction case for this bug"
+- "Do security research on this function without running the whole app"
+- "Pull out just the auth logic" / "Isolate this code"
+
+**Using other skills as context:** Before extracting, use `claudit index lookup` to find where functions are defined, and `claudit harness analyze-deps` to understand the dependency tree. For Java/Spring projects, `claudit graph callees` helps identify what the function actually calls at runtime.
 
 ## Concept
 
