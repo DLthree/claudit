@@ -1,0 +1,9 @@
+{
+  "assertions": [
+    {"text": "Creates a skeleton project directory structure for the harness", "passed": null, "evidence": "Rate limited — no output produced."},
+    {"text": "Uses claudit harness extract to pull functions from the project", "passed": null, "evidence": "Rate limited — no output produced."},
+    {"text": "Uses claudit harness analyze-deps to identify dependencies", "passed": null, "evidence": "Rate limited — no output produced."},
+    {"text": "Follows the iterative compile->stub/extract loop described in the skill", "passed": null, "evidence": "Rate limited — no output produced."}
+  ],
+  "note": "rate_limited"
+}

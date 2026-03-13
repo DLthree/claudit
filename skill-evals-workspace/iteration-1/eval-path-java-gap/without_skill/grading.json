@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit path find to attempt the path first", "passed": false, "evidence": "Agent used manual source reading (15 tool calls). No claudit path find used."},
+    {"text": "If 0 paths, uses graph callees/callers fallback and reads source", "passed": false, "evidence": "No claudit commands used at all. Went straight to manual source inspection."},
+    {"text": "Mentions Java interface->implementation edge gap as the likely cause of missing paths", "passed": false, "evidence": "Agent read source directly and found createGroup calls dao.create() but never mentioned the interface/impl indexing limitation."}
+  ]
+}

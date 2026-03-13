@@ -1,0 +1,8 @@
+{
+  "assertions": [
+    {"text": "Uses claudit harness extract --functions createScimGroup", "passed": null, "evidence": "Rate limited — no output produced."},
+    {"text": "Uses claudit harness analyze-deps to map dependencies", "passed": null, "evidence": "Rate limited — no output produced."},
+    {"text": "Provides a skeleton project with extracted code (not just prints the source)", "passed": null, "evidence": "Rate limited — no output produced."}
+  ],
+  "note": "rate_limited"
+}

@@ -1,0 +1,9 @@
+{
+  "function": "createUser",
+  "file": "server/src/main/java/org/cloudfoundry/identity/uaa/account/AccountCreationService.java",
+  "start_line": 11,
+  "end_line": 11,
+  "source": "    ScimUser createUser(String username, String password, String origin);",
+  "highlighted_html": "<span class=\"w\">    </span><span class=\"n\">ScimUser</span><span class=\"w\"> </span><span class=\"nf\">createUser</span><span class=\"p\">(</span><span class=\"n\">String</span><span class=\"w\"> </span><span class=\"n\">username</span><span class=\"p\">,</span><span class=\"w\"> </span><span class=\"n\">String</span><span class=\"w\"> </span><span class=\"n\">password</span><span class=\"p\">,</span><span class=\"w\"> </span><span class=\"n\">String</span><span class=\"w\"> </span><span class=\"n\">origin</span><span class=\"p\">);</span>\n",
+  "language": "java"
+}

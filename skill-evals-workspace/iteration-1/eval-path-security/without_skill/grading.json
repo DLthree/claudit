@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit path find with appropriate source and target functions", "passed": false, "evidence": "Agent used manual file reading (34 tool calls). No claudit path find invoked."},
+    {"text": "If 0 paths found, falls back to claudit graph callees/callers to manually reconstruct", "passed": false, "evidence": "No claudit commands used. Did manual source inspection directly."},
+    {"text": "Mentions or handles the Java interface->impl edge limitation", "passed": false, "evidence": "Agent found parameterized SQL correctly but never mentioned interface->impl gap. Actually found a valid sortBy SQL concat concern — useful but off-skill."}
+  ]
+}

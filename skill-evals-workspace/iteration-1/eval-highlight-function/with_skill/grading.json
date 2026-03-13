@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit highlight function createUser --project-dir ...' correctly", "passed": true, "evidence": "Ran 'claudit highlight function createUser --project-dir /Users/dloffre/proj/claudit/sample-uaa' — exact correct syntax."},
+    {"text": "Does NOT use wrong syntax (e.g. highlight path with single function, or wrong flags)", "passed": true, "evidence": "Used 'highlight function' subcommand correctly, not 'highlight path'."},
+    {"text": "Returns or describes highlighted HTML or raw source output", "passed": true, "evidence": "Got highlighted HTML with Pygments 'friendly' style, interface declaration at AccountCreationService.java:11. Noted interface vs impl limitation."}
+  ]
+}

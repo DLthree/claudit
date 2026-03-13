@@ -1,0 +1,65 @@
+{
+  "skill_name": "claudit-skills",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just cloned a Java project at /Users/dloffre/proj/claudit/sample-uaa and want to start exploring it before a security audit. What symbols and functions does it contain? Give me an overview.",
+      "expected_output": "Claude uses claudit index (create + list-symbols) to index the project and list its symbols, rather than manually grepping source files.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Where is ScimGroupProvisioning defined in /Users/dloffre/proj/claudit/sample-uaa? Show me the source.",
+      "expected_output": "Claude uses claudit index lookup to find the definition, then claudit index get-body or reads the source at the right location.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "What does createScimGroup call in /Users/dloffre/proj/claudit/sample-uaa? I want to understand the call relationships.",
+      "expected_output": "Claude builds the call graph and uses claudit graph callees createScimGroup to show what it calls.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "What calls the save method in /Users/dloffre/proj/claudit/sample-uaa? I need to find all the entry points that persist data.",
+      "expected_output": "Claude uses claudit graph callers save to find callers, without passing --language to callers subcommand.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I'm doing a security audit of /Users/dloffre/proj/claudit/sample-uaa. Can user input from the REST layer reach the database save operations? Trace the execution path.",
+      "expected_output": "Claude uses claudit path find with appropriate source and target functions, and handles 0-path result gracefully using the graph callees/callers fallback workflow.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Is the getByName method reachable from createGroup in /Users/dloffre/proj/claudit/sample-uaa?",
+      "expected_output": "Claude uses claudit path find, and if 0 paths are found (due to Java interface/impl edge gap), falls back to graph callees/callers and reads source to verify manually.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "I found a call chain in /Users/dloffre/proj/claudit/sample-uaa: createScimGroup calls validateGroup which calls save. Highlight those three functions in the source.",
+      "expected_output": "Claude uses claudit highlight path createScimGroup validateGroup save --project-dir ... to produce color-annotated output.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Show me the highlighted source for the createUser function in /Users/dloffre/proj/claudit/sample-uaa.",
+      "expected_output": "Claude uses claudit highlight function createUser --project-dir ... to produce highlighted HTML output.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "I want to fuzz the input validation in /Users/dloffre/proj/claudit/sample-uaa. Create a standalone test harness for the ScimGroup creation logic so I can test it in isolation.",
+      "expected_output": "Claude follows the harness iterative workflow: creates skeleton project, extracts functions with claudit harness extract, attempts compilation, stubs or extracts dependencies.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Extract the createScimGroup function from /Users/dloffre/proj/claudit/sample-uaa and make it standalone for security testing. I need to understand all its dependencies.",
+      "expected_output": "Claude uses claudit harness extract with --functions createScimGroup, then claudit harness analyze-deps to identify dependencies, then iterates on compilation.",
+      "files": []
+    }
+  ]
+}

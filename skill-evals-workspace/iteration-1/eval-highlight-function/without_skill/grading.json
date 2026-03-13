@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit highlight function createUser --project-dir ...' correctly", "passed": false, "evidence": "Agent used grep (79 files!) and source reading. No claudit highlight command used."},
+    {"text": "Does NOT use wrong syntax (e.g. highlight path with single function, or wrong flags)", "passed": false, "evidence": "No highlight command attempted."},
+    {"text": "Returns or describes highlighted HTML or raw source output", "passed": false, "evidence": "Agent described source text but produced no HTML output. User requested highlighted source — that requires the skill."}
+  ]
+}

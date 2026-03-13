@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit index create or claudit index list-symbols rather than manually grepping source files", "passed": true, "evidence": "Agent ran claudit index create (got 'exists') then claudit index list-symbols returning 12,062 symbols. No manual grep used."},
+    {"text": "Does NOT use python -m claudit.skills.index", "passed": true, "evidence": "Used claudit CLI throughout."},
+    {"text": "Returns a structured list of symbols from the project", "passed": true, "evidence": "Got 12,062 symbols and organized them into subsystems: OAuth2/token, authentication, SCIM, IdP, audit, etc."}
+  ]
+}

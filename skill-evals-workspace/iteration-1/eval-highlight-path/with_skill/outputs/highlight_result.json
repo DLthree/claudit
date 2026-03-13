@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "author": "claudit highlight",
+    "timestamp": "2026-03-12T00:13:06.645Z",
+    "tool": "claudit",
+    "version": "0.1.0"
+  },
+  "results": [
+    {
+      "ID": "1",
+      "description": "definition of createScimGroup",
+      "notes": "Definition not found for 'createScimGroup'",
+      "category": "Call path",
+      "severity": "info",
+      "filename": "<unknown>",
+      "linenum": 0,
+      "col_start": 1,
+      "col_end": 1,
+      "function": "createScimGroup",
+      "color": "rgba(255, 107, 107, 0.3)"
+    },
+    {
+      "ID": "2",
+      "description": "definition of validateGroup",
+      "notes": "Intermediate: called from createScimGroup(), calls save()",
+      "category": "Call path",
+      "severity": "info",
+      "filename": "server/src/main/java/org/cloudfoundry/identity/uaa/scim/jdbc/JdbcScimGroupProvisioning.java",
+      "linenum": 346,
+      "col_start": 18,
+      "col_end": 30,
+      "function": "validateGroup",
+      "color": "rgba(78, 205, 196, 0.3)"
+    },
+    {
+      "ID": "3",
+      "description": "definition of save",
+      "notes": "Definition not found for 'save'",
+      "category": "Call path",
+      "severity": "info",
+      "filename": "<unknown>",
+      "linenum": 0,
+      "col_start": 1,
+      "col_end": 1,
+      "function": "save",
+      "color": "rgba(69, 183, 209, 0.3)"
+    }
+  ]
+}

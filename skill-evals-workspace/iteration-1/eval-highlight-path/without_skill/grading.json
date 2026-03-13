@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit highlight path createScimGroup validateGroup save --project-dir ...' correctly", "passed": false, "evidence": "Agent did manual source analysis and never ran any highlight command."},
+    {"text": "Does NOT use wrong syntax like 'claudit highlight --path' or omit --project-dir", "passed": false, "evidence": "No highlight command attempted at all."},
+    {"text": "Produces or describes output in the Results Format with color-annotated spans", "passed": false, "evidence": "Agent produced a text description of where the functions are, but no JSON Results Format output, no color annotations, no span data."}
+  ]
+}

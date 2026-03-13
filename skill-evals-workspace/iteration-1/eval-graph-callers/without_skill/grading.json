@@ -1,0 +1,8 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit graph callers save' as a subcommand (not --callers flag or graph query)", "passed": false, "evidence": "Rate limited — no output produced."},
+    {"text": "Does NOT pass --language to the callers subcommand", "passed": false, "evidence": "Rate limited — no output produced."},
+    {"text": "Returns callers of save or explains the data persistence entry points", "passed": false, "evidence": "Rate limited — no output produced."}
+  ],
+  "note": "rate_limited"
+}

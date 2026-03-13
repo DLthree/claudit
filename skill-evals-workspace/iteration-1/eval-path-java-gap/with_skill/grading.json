@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit path find to attempt the path first", "passed": true, "evidence": "Ran 'claudit path find createGroup getByName ... --language java' — got 0 paths as first step."},
+    {"text": "If 0 paths, uses graph callees/callers fallback and reads source", "passed": true, "evidence": "Ran graph callees createGroup and graph callers getByName, then read source of ScimGroupEndpoints.java and JdbcScimGroupProvisioning.java to confirm."},
+    {"text": "Mentions Java interface->implementation edge gap as the likely cause of missing paths", "passed": true, "evidence": "Explicitly noted 'dao is typed as the ScimGroupProvisioning interface — this is where the Java interface/impl gap could have hidden a path' and correctly concluded the 0-path result is genuine, not a false negative."}
+  ]
+}

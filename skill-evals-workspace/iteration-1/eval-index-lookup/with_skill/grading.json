@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit index lookup with kind=definitions OR claudit index get-body", "passed": true, "evidence": "Agent ran 'claudit index lookup ScimGroupProvisioning ... --kind definitions' then 'claudit index get-body ScimGroupProvisioning ... --language java'."},
+    {"text": "Identifies the correct file and line number for ScimGroupProvisioning", "passed": true, "evidence": "Found: server/src/main/java/org/cloudfoundry/identity/uaa/scim/ScimGroupProvisioning.java, line 19."},
+    {"text": "Does not just grep the source directory manually without claudit", "passed": true, "evidence": "All lookups used claudit CLI. Also first ran claudit index create to confirm index exists."}
+  ]
+}

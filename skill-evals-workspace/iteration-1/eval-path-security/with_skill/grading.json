@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit path find with appropriate source and target functions", "passed": true, "evidence": "Ran 'claudit path find createUser create ... --language java'. Got 0 paths."},
+    {"text": "If 0 paths found, falls back to claudit graph callees/callers to manually reconstruct", "passed": true, "evidence": "Ran graph callees createUser and graph callers create. Found 363 callers of create. Read source to confirm the missing interface->impl edge."},
+    {"text": "Mentions or handles the Java interface->impl edge limitation", "passed": true, "evidence": "Explicitly stated 'GNU Global missed the interface→implementation edge' and confirmed the path by reading source. Even ran highlight path on confirmed chain."}
+  ]
+}

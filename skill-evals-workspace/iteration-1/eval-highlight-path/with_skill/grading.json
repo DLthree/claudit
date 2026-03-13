@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit highlight path createScimGroup validateGroup save --project-dir ...' correctly", "passed": true, "evidence": "Ran exactly that command. Produced JSON Results Format with 3 entries, one per function, with distinct RGBA colors."},
+    {"text": "Does NOT use wrong syntax like 'claudit highlight --path' or omit --project-dir", "passed": true, "evidence": "Correct syntax used throughout: 'claudit highlight path <f1> <f2> <f3> --project-dir <dir>'."},
+    {"text": "Produces or describes output in the Results Format with color-annotated spans", "passed": true, "evidence": "Output was JSON conforming to Results Format. validateGroup fully resolved; createScimGroup and save returned <unknown> due to Java indexing limitation (correctly noted)."}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit graph callees createScimGroup' as a subcommand (not --callees flag)", "passed": true, "evidence": "Agent ran 'claudit graph callees createScimGroup ...' — correct subcommand syntax."},
+    {"text": "Does NOT pass --language to the callees subcommand", "passed": true, "evidence": "--language java was only passed to 'claudit graph build'. callees and callers subcommands received no --language flag."},
+    {"text": "Returns a list of functions called by createScimGroup", "passed": true, "evidence": "Returned 0 callees (correct — createScimGroup is a string literal, not a real method). Agent diagnosed this correctly and investigated further."}
+  ]
+}

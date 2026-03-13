@@ -1,0 +1,8 @@
+{
+  "assertions": [
+    {"text": "Uses claudit index create or claudit index list-symbols rather than manually grepping source files", "passed": false, "evidence": "Agent hit rate limit after 55 tool uses; no claudit commands were recorded in the output."},
+    {"text": "Does NOT use python -m claudit.skills.index", "passed": true, "evidence": "No claudit invocation at all (rate limited)."},
+    {"text": "Returns a structured list of symbols from the project", "passed": false, "evidence": "Rate limited — no output produced."}
+  ],
+  "note": "rate_limited"
+}

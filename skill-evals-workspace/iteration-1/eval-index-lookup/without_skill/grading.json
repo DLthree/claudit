@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses claudit index lookup with kind=definitions OR claudit index get-body", "passed": false, "evidence": "Agent used grep and Glob to find the file. No claudit commands used."},
+    {"text": "Identifies the correct file and line number for ScimGroupProvisioning", "passed": true, "evidence": "Found: server/src/main/java/.../ScimGroupProvisioning.java line 19 — correct."},
+    {"text": "Does not just grep the source directory manually without claudit", "passed": false, "evidence": "Agent used manual grep/Glob to find the definition, not claudit."}
+  ]
+}

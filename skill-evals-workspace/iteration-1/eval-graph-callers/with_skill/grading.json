@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit graph callers save' as a subcommand (not --callers flag or graph query)", "passed": true, "evidence": "Agent ran 'claudit graph callers save ...' — correct subcommand. Also ran callees for cross-check."},
+    {"text": "Does NOT pass --language to the callers subcommand", "passed": true, "evidence": "--language java was only passed to graph build. callers received no --language flag."},
+    {"text": "Returns callers of save or explains the data persistence entry points", "passed": true, "evidence": "Got 0 callers (save method doesn't exist), then correctly identified the actual JDBC persistence methods and their REST entry points."}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "assertions": [
+    {"text": "Uses 'claudit graph callees createScimGroup' as a subcommand (not --callees flag)", "passed": false, "evidence": "Agent used manual grep/source reading exclusively. Never ran claudit graph callees."},
+    {"text": "Does NOT pass --language to the callees subcommand", "passed": false, "evidence": "No claudit graph commands used at all."},
+    {"text": "Returns a list of functions called by createScimGroup", "passed": true, "evidence": "Agent read ScimGroupEndpointDocs.java and identified the test helper's callees (post, serializeWithoutMeta, mockMvc.perform)."}
+  ]
+}
